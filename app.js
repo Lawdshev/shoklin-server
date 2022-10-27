@@ -6,6 +6,17 @@ const app = express();
 app.use(express.json());
 app.use(cors())
 
+const randomString=()=>{
+    let hex =[1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 'A', 'B','C', 'D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y', 'Z','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'];
+    let hexColor = "";
+    for (let i = 0; i < 8; i++) {
+    hexColor += hex[getRandomNumber()];
+    }
+    function getRandomNumber() {
+      return Math.floor(Math.random() * hex.length);
+    }
+    return hexColor
+}
 app.get('/customers',(req,res)=>{
     fs.readFile('files/customers.json','utf8', (err,data)=>{
         res.send(data)
@@ -17,14 +28,14 @@ app.post('/customers',(req,res)=>{
         data = JSON.parse(data);
         
         const newCustomer = {
-            _id: data.length + 1,
+            _id: randomString(),
             name:req.body.name,
             email:req.body.email,
            address:req.body.address,
             phone:req.body.phone,
             tickets: []
         };
-        data.push(JSON.stringify(newCustomer));
+        data.push(newCustomer);
         
         fs.writeFile('files/customers.json',JSON.stringify(data) , function (err) {
             if (err) throw err;
@@ -42,7 +53,7 @@ app.post('/customers/:id/addOrder',(req,res)=>{
         const customer = data.find(c=>c._id === id );
 
         const newOrder = {
-            _orderId: 'xxx',
+            _orderId: randomString(),
             typeOfOrder: req.body.typeOfOrder,
             numberOfClothes:  req.body.numberOfClothes,
             price:  req.body.price,
