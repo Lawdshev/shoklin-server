@@ -6,31 +6,6 @@ const app = express();
 app.use(express.json());
 app.use(cors())
 
-function validateUser(user)
-{
-    const JoiSchema = Joi.object({
-      
-        name: Joi.string()
-                .min(5)
-                .max(30)
-                .required(),
-                    
-        email: Joi.string()
-               .email()
-               .min(5)
-               .max(50)
-               .required(), 
-                 
-        phone: Joi.string()
-                .required(),
-                         
-        address: Joi.string()
-                 .required()
-    }).options({ abortEarly: false });
-  
-    return JoiSchema.validate(user)
-}
-
 app.get('/customers',(req,res)=>{
     fs.readFile('files/customers.json','utf8', (err,data)=>{
         res.send(data)
@@ -43,24 +18,19 @@ app.post('/customers',(req,res)=>{
         
         const newCustomer = {
             _id: data.length + 1,
-            name: req.body.name,
-            email: req.body.email,
-           address: req.body.address,
-            phone: req.body.phone,
+            name:req.body.name,
+            email:req.body.email,
+           address:req.body.address,
+            phone:req.body.phone,
             tickets: []
         };
-        const { error } = validateUser(newCustomer);
-        if (error){
-        res.status(400).send(error.details[0].message)
-        return;
-        }
-        data.push(newCustomer);
+        data.push(JSON.stringify(newCustomer));
         
         fs.writeFile('files/customers.json',JSON.stringify(data) , function (err) {
             if (err) throw err;
             console.log('Replaced!');
           });
-          res.send(data)
+          res.send(newCustomer)
      })  
 })
 //ADD TICKET
