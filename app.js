@@ -50,7 +50,7 @@ app.post('/customers/:id/addOrder',(req,res)=>{
     
     fs.readFile('files/customers.json','utf8', (err,data)=>{
         data = JSON.parse(data);
-        const customer = data.find(c=>c._id === id );
+        const customer = data.find(c=>c._id == id );
 
         const newOrder = {
             _orderId: randomString(),
@@ -65,7 +65,7 @@ app.post('/customers/:id/addOrder',(req,res)=>{
         
         fs.writeFile('files/customers.json',JSON.stringify(data) , function (err) {
             if (err) throw err;
-            console.log('Replaced!');
+            console.log('POSTED!');
           });
         res.send(data)
      })  
