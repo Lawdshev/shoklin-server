@@ -9,7 +9,7 @@ app.use(cors())
 const randomString=()=>{
     let hex =[1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 'A', 'B','C', 'D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y', 'Z','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'];
     let hexColor = "";
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 7; i++) {
     hexColor += hex[getRandomNumber()];
     }
     function getRandomNumber() {
@@ -46,7 +46,7 @@ app.post('/customers',(req,res)=>{
 })
 //ADD TICKET
 app.post('/customers/:id/addOrder',(req,res)=>{
-    const id = parseInt(req.params.id);
+    const id = req.params.id;
     
     fs.readFile('files/customers.json','utf8', (err,data)=>{
         data = JSON.parse(data);
@@ -72,7 +72,7 @@ app.post('/customers/:id/addOrder',(req,res)=>{
 })
 //Edit information
 app.put('/customers/:id/editInfo',(req,res)=>{
-    const id = parseInt(req.params.id);
+    const id = req.params.id;
     
     fs.readFile('files/customers.json','utf8', (err,data)=>{
         data = JSON.parse(data);
