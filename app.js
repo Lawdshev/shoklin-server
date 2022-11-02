@@ -1,22 +1,21 @@
+require('dotenv').config();
 const express = require("express");
-const Joi = require('joi');
 const cors = require('cors')
 const mongoose = require('mongoose')
-const fs = require('fs');
 const app = express();
-const hostname = '0.0.0.0';
-const port = 8080;
+const hostname = process.env.HOST;
+const port = process.env.PORT;
 app.use(express.json());
 app.use(cors())
 
-mongoose.connect('mongodb+srv://lawdshev:shevatar7@cluster0.enorz7b.mongodb.net/test').then(()=> console.log('connected to mongodb'))
+mongoose.connect(process.env.DB_URL).then(()=> console.log('connected to mongodb'))
 .catch(err=> console.error("couldn't connect",err));
 
 const customerSchema = mongoose.Schema({
     name: String,
     phone: String,
     address: String,
-    email: String,
+    email: String, 
     tickets: [{
         _orderId: String,
         typeOfOrder: String,
@@ -68,7 +67,6 @@ app.post('/customers', async (req,res)=>{
 //ADD TICKET
 app.put('/customers/:id/addOrder', async (req,res)=>{
     const id = req.params.id; 
-    // const customer = await Customers.findByIdAndUpdate(id);
     
     const newOrder = {
         _orderId : randomString(),
@@ -106,5 +104,5 @@ app.put('/customers/:id/editInfo', async(req,res)=>{
         }    
     })
 
-app.listen(port,hostname, ()=> console.log(`Server runnin at http://${hostname}:${port}/`));
+app.listen(port,hostname, ()=> console.log(`Server running`));
 
