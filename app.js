@@ -1,12 +1,34 @@
 const express = require("express");
 const Joi = require('joi');
 const cors = require('cors')
+const mongoose = require('mongoose')
 const fs = require('fs');
 const app = express();
 const hostname = '0.0.0.0';
 const port = 8080;
 app.use(express.json());
 app.use(cors())
+
+mongoose.connect('mongodb+srv://lawdshev:shevatar7@cluster0.enorz7b.mongodb.net/test').then(()=> console.log('connected to mongodb'))
+.catch(err=> console.error("couldn't connect",err));
+
+const customerSchema = mongoose.Schema({
+    name: String,
+    phone: String,
+    address: String,
+    email: String,
+    tickets: [{
+        _orderId: String,
+        typeOfOrder: String,
+        numberOfClothes:  Number,
+        price: Number,
+        pickUpName: String,
+        pickUpAddress: String,
+        phoneNumber: String
+    }]
+})
+
+const Customers = mongoose.model('Customers',customerSchema);
 
 const randomString=()=>{
     let hex =[1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 'A', 'B','C', 'D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y', 'Z','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'];
@@ -19,79 +41,70 @@ const randomString=()=>{
     }
     return hexColor
 }
-app.get('/customers',(req,res)=>{
-    fs.readFile('files/customers.json','utf8', (err,data)=>{
-        res.send(data)
-     })
+app.get('/customers', async (req,res)=>{
+    try {
+        const customers = await Customers.find()
+        res.send(customers)
+    } catch (error) {
+        res.status(400).send('no customers yet')
+    }
 });
 //ADD CUSTOMER
-app.post('/customers',(req,res)=>{
-    fs.readFile('files/customers.json','utf8', (err,data)=>{
-        data = JSON.parse(data);
-        
-        const newCustomer = {
-            _id: randomString(),
-            name:req.body.name,
-            email:req.body.email,
-           address:req.body.address,
-            phone:req.body.phone,
-            tickets: []
-        };
-        data.push(newCustomer);
-        
-        fs.writeFile('files/customers.json',JSON.stringify(data) , function (err) {
-            if (err) throw err;
-            console.log('Replaced!');
-          });
-          res.send(newCustomer)
+app.post('/customers', async (req,res)=>{
+    let customer = new Customers({
+        name:req.body.name,
+        email:req.body.email,
+       address:req.body.address,
+        phone:req.body.phone,
+        tickets: []
+    })
+        try {
+            await customer.save()
+            res.send(customer)
+        } catch (error) {
+            res.send(error)
+        }
      })  
-})
 //ADD TICKET
-app.post('/customers/:id/addOrder',(req,res)=>{
-    const id = req.params.id;
+app.put('/customers/:id/addOrder', async (req,res)=>{
+    const id = req.params.id; 
+    // const customer = await Customers.findByIdAndUpdate(id);
     
-    fs.readFile('files/customers.json','utf8', (err,data)=>{
-        data = JSON.parse(data);
-        const customer = data.find(c=>c._id == id );
+    const newOrder = {
+        _orderId : randomString(),
+        numberOfClothes : req.body.numberOfClothes,
+        typeOfOrder : req.body.typeOfOrder,
+        price: req.body.price,
+    }
+    try{
+        const customer = await Customers.findByIdAndUpdate({ _id: id }, {
+            $push: { tickets: newOrder }
+           }, { new: true })
 
-        const newOrder = {
-            _orderId: randomString(),
-            typeOfOrder: req.body.typeOfOrder,
-            numberOfClothes:  req.body.numberOfClothes,
-            price:  req.body.price,
-            pickUpName: customer.name,
-            pickUpAddress: customer.address,
-            phoneNumber: customer.phone
-        };
-        customer.tickets.push(newOrder);
-        
-        fs.writeFile('files/customers.json',JSON.stringify(data) , function (err) {
-            if (err) throw err;
-            console.log('POSTED!');
-          });
-        res.send(data)
+        res.send(customer)
+    }
+     catch (error) {
+        res.send(error)
+    }
      })  
-})
 //Edit information
-app.put('/customers/:id/editInfo',(req,res)=>{
+app.put('/customers/:id/editInfo', async(req,res)=>{
     const id = req.params.id;
-    
-    fs.readFile('files/customers.json','utf8', (err,data)=>{
-        data = JSON.parse(data);
-        const customer = data.find(c=>c._id === id );
-            customer.name = !req.body.name? customer.name: req.body.name,
-            customer.email= !req.body.email? customer.name:req.body.email,
-            customer.address= !req.body.address? customer.name:req.body.address,
-            customer.phone= !req.body.phone? customer.name:req.body.phone,
-        
-        fs.writeFile('files/customers.json',JSON.stringify(data) , function (err) {
-            if (err) throw err;
-            console.log('Replaced!');
-          });
-        res.send(data)
-     })  
-})
-
+        const customer = await Customers.findById(id);
+        if (!customer) return;
+        try {
+            customer.set({ 
+                name: !req.body.name? customer.name: req.body.name,
+                email: !req.body.email? customer.name:req.body.email,
+                address: !req.body.address? customer.name:req.body.address,
+                phone: !req.body.phone? customer.name:req.body.phone,
+             });
+            customer.save()
+            res.send()
+        } catch (error) {
+            res.send(error)
+        }    
+    })
 
 app.listen(port,hostname, ()=> console.log(`Server runnin at http://${hostname}:${port}/`));
 
